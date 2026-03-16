@@ -1,0 +1,38 @@
+{
+  "name": "seo-links-pages-scrape-audit",
+  "version": "1.0.0",
+  "description": "Personal SEO crawl and audit CLI for small websites",
+  "type": "module",
+  "main": "dist/index.js",
+  "bin": {
+    "seo": "dist/cli.js"
+  },
+  "scripts": {
+    "clean": "find . -name '._*' -type f -delete",
+    "build": "tsc -p tsconfig.json",
+    "dev": "tsx src/cli.ts",
+    "test": "vitest run"
+  },
+  "keywords": [
+    "seo",
+    "cli",
+    "crawler",
+    "audit"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "cheerio": "^1.2.0",
+    "commander": "^14.0.3",
+    "csv-stringify": "^6.6.0",
+    "undici": "^7.24.0"
+  },
+  "devDependencies": {
+    "@types/node": "^25.5.0",
+    "eslint": "^10.0.3",
+    "prettier": "^3.8.1",
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.3",
+    "vitest": "^4.1.0"
+  }
+}

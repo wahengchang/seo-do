@@ -1,0 +1,8 @@
+node_modules
+dist
+coverage
+state
+tmp_state
+.DS_Store
+._*
+sample.csv

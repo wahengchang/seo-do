@@ -29,8 +29,16 @@
     "audit",
     "sitemap"
   ],
-  "author": "",
-  "license": "ISC",
+  "author": "wahengchang",
+  "license": "MIT",
+  "homepage": "https://github.com/wahengchang/seo-do#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/wahengchang/seo-do.git"
+  },
+  "bugs": {
+    "url": "https://github.com/wahengchang/seo-do/issues"
+  },
   "dependencies": {
     "cheerio": "^1.2.0",
     "commander": "^14.0.3",

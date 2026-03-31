@@ -1,6 +1,14 @@
 # seo-do
 
-A lightweight Node.js + TypeScript CLI tool for crawling, auditing, and analyzing SEO signals on small websites (< 100 pages).
+A CLI tool that automates the tedious parts of daily SEO work:
+
+- **Crawl** a site and collect every page
+- **Audit** title, description, headings, canonical, structured data, GA4/GTM — exported as CSV
+- **Download and search** sitemaps locally
+- **Track changes over time** with dated project runs — compare today vs yesterday
+- **Archive TDK history** so you know exactly when a title or description changed
+
+No browser needed. No database. Just plain files you can open in any spreadsheet.
 
 ## Install
 
@@ -73,6 +81,12 @@ Detailed usage guides are in the [`docs/`](./docs/) folder:
 npm run dev -- pages crawl https://www.example.com
 npm test
 ```
+
+## Links
+
+- [GitHub](https://github.com/wahengchang/seo-do)
+- [npm](https://www.npmjs.com/package/seo-do)
+- [Issues](https://github.com/wahengchang/seo-do/issues)
 
 ## License
 

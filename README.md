@@ -14,7 +14,7 @@ npm install -g seo-do
 
 ```bash
 npm install seo-do
-npx seo pages crawl https://www.example.com
+npx seo-do pages crawl https://www.example.com
 ```
 
 **From source (development):**
@@ -30,8 +30,8 @@ npm link
 ## Basic Usage
 
 ```bash
-seo pages crawl https://www.example.com
-seo pages audit ./state/done.txt
+seo-do pages crawl https://www.example.com
+seo-do pages audit ./state/done.txt
 ```
 
 **Output:** `./state/audit.csv`
@@ -49,7 +49,7 @@ seo pages audit ./state/done.txt
 | `project runs <name>` | List all past runs for a project |
 
 ```bash
-seo --help
+seo-do --help
 ```
 
 ## Docs

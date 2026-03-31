@@ -5,7 +5,7 @@
   "type": "module",
   "main": "dist/index.js",
   "bin": {
-    "seo": "dist/cli.js"
+    "seo-do": "dist/cli.js"
   },
   "files": [
     "dist",

@@ -1,26 +1,37 @@
-# SEO Links Pages Scrape Audit
+# seo-do
 
 A lightweight Node.js + TypeScript CLI tool for crawling, auditing, and analyzing SEO signals on small websites (< 100 pages).
 
-## Quick Start
+## Install
+
+**Global (recommended):**
 
 ```bash
+npm install -g seo-do
+```
+
+**Local (within a project):**
+
+```bash
+npm install seo-do
+npx seo pages crawl https://www.example.com
+```
+
+**From source (development):**
+
+```bash
+git clone https://github.com/wahengchang/seo-do.git
+cd seo-do
 npm install
 npm run build
+npm link
 ```
 
 ## Basic Usage
 
-**Crawl a website:**
-
 ```bash
-node dist/cli.js pages crawl https://www.example.com
-```
-
-**Audit crawled pages:**
-
-```bash
-node dist/cli.js pages audit ./state/done.txt
+seo pages crawl https://www.example.com
+seo pages audit ./state/done.txt
 ```
 
 **Output:** `./state/audit.csv`
@@ -38,7 +49,7 @@ node dist/cli.js pages audit ./state/done.txt
 | `project runs <name>` | List all past runs for a project |
 
 ```bash
-node dist/cli.js --help
+seo --help
 ```
 
 ## Docs
@@ -62,3 +73,7 @@ Detailed usage guides are in the [`docs/`](./docs/) folder:
 npm run dev -- pages crawl https://www.example.com
 npm test
 ```
+
+## License
+
+MIT

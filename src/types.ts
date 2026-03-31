@@ -46,6 +46,12 @@ export interface FetchPageResult {
   headers: Record<string, string>;
 }
 
+export interface Project {
+  name: string;
+  url: string;
+  createdAt: string; // ISO 8601
+}
+
 export interface AuditRecord {
   url: string;
   title: string;
@@ -71,3 +77,4 @@ export interface AuditRecord {
   isSsr: 'TRUE' | 'FALSE';
   countStructureData: number;
 }
+

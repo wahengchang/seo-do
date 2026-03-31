@@ -35,6 +35,10 @@ export async function readLines(filePath: string): Promise<string[]> {
     .filter(Boolean);
 }
 
+export async function writeLines(filePath: string, lines: string[]): Promise<void> {
+  await writeFile(filePath, lines.length > 0 ? `${lines.join('\n')}\n` : '', 'utf8');
+}
+
 export async function appendLines(filePath: string, lines: string[]): Promise<void> {
   if (lines.length === 0) return;
   await appendFile(filePath, `${lines.join('\n')}\n`, 'utf8');
@@ -61,3 +65,4 @@ export async function writeAuditCsv(filePath: string, rows: AuditRecord[]): Prom
   });
   await writeFile(filePath, csv, 'utf8');
 }
+

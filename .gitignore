@@ -6,3 +6,11 @@ tmp_state
 .DS_Store
 ._*
 sample.csv
+*-state/
+projects/
+projects.json
+.planning/
+*.txt
+*.csv
+.claude/
+*.xml

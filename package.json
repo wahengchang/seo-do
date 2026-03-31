@@ -1,5 +1,5 @@
 {
-  "name": "seo-links-pages-scrape-audit",
+  "name": "seo-do",
   "version": "2.0.0",
   "description": "CLI tool for crawling, auditing, and analyzing SEO signals on small websites",
   "type": "module",

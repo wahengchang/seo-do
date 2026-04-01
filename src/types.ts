@@ -53,6 +53,12 @@ export interface Project {
   createdAt: string; // ISO 8601
 }
 
+export interface RobotsDirective {
+  userAgent: string;
+  directive: string;
+  value: string;
+}
+
 export interface AuditRecord {
   url: string;
   title: string;

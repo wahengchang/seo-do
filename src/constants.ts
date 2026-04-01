@@ -1,4 +1,4 @@
-import type { AuditRecord } from './types.js';
+import type { AuditRecord, RobotsDirective } from './types.js';
 
 export const TRACKING_PARAMS = new Set([
   'utm_source',
@@ -28,6 +28,12 @@ export const NON_HTML_EXTENSIONS = [
   '.ico',
   '.xml',
   '.json',
+];
+
+export const ROBOTS_COLUMNS: Array<keyof RobotsDirective> = [
+  'userAgent',
+  'directive',
+  'value',
 ];
 
 export const AUDIT_COLUMNS: Array<keyof AuditRecord> = [

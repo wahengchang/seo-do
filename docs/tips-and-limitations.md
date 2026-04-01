@@ -16,6 +16,10 @@
 
 ## Tips
 
+### HTML Cache
+
+Pages fetched during crawl are cached in `state/html/`. When you run `pages audit`, cached pages are reused automatically -- no re-download. Delete `state/html/` to force a fresh fetch.
+
 ### Edit `done.txt` Before Auditing
 
 The crawl-then-audit workflow is intentionally split so you can clean up the URL list:

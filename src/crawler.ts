@@ -1,5 +1,6 @@
 import { collectAnchorHrefs } from './shared/html.js';
 import { fetchPage } from './shared/http.js';
+import { fetchPageCached } from './shared/cache.js';
 import { parseSitemapXml, filterSitemapUrls, isSitemapIndex } from './shared/sitemap.js';
 import { getSkipReason, normalizeUrl } from './shared/url.js';
 import { appendErrors, appendLines, appendSkipped, ensureStateFiles, readLines, writeLines } from './io/files.js';
@@ -9,6 +10,7 @@ import type { CrawlOptions, ErrorRecord, SkippedRecord } from './types.js';
 export async function runCrawl(seedUrl: string, options: CrawlOptions): Promise<{ doneCount: number; errorCount: number }> {
   const paths = getStatePaths(options.stateDir);
   await ensureStateFiles(paths);
+  const { htmlDir } = paths;
 
   const seed = new URL(seedUrl);
   let crawlOrigin = seed.origin;
@@ -60,7 +62,7 @@ export async function runCrawl(seedUrl: string, options: CrawlOptions): Promise<
     console.log(`[crawl] fetching [${done.size + 1}] ${currentUrl}`);
 
     try {
-      const page = await fetchPage(currentUrl);
+      const page = await fetchPageCached(currentUrl, htmlDir);
       if (done.size === 0 && page.redirected) {
         crawlOrigin = new URL(page.finalUrl).origin;
         console.log(`[crawl] redirect detected, origin updated to ${crawlOrigin}`);

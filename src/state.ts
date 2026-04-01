@@ -9,5 +9,6 @@ export function getStatePaths(stateDir: string): StatePaths {
     skippedFile: path.join(stateDir, 'skipped.txt'),
     errorFile: path.join(stateDir, 'error.txt'),
     auditFile: path.join(stateDir, 'audit.csv'),
+    htmlDir: path.join(stateDir, 'html'),
   };
 }

@@ -49,6 +49,8 @@ Open `./state/done.txt` and remove any URLs you don't want to audit:
 
 ## Step 3: Audit
 
+The audit reuses HTML pages cached during the crawl (stored in `state/html/`), so pages are not re-downloaded.
+
 ```bash
 node dist/cli.js pages audit ./state/done.txt
 ```

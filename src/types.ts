@@ -12,6 +12,7 @@ export interface StatePaths {
   skippedFile: string;
   errorFile: string;
   auditFile: string;
+  htmlDir: string;
 }
 
 export interface CrawlOptions {

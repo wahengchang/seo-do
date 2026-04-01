@@ -11,6 +11,7 @@ All files are written to `--state-dir` (default `./state`).
 | `skipped.txt` | `url<TAB>reason` | Skipped URLs with reason |
 | `error.txt` | `url<TAB>stage<TAB>message` | Failed URLs with error details |
 | `audit.csv` | CSV | Final audit output |
+| `html/` | Directory | Cached HTML pages (reused across crawl and audit) |
 
 ## Audit CSV Fields
 

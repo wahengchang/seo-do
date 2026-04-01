@@ -146,10 +146,13 @@ Conventions: booleans as `TRUE`/`FALSE`, missing strings as `""`, multi-value fi
 | `skipped.txt` | `url<TAB>reason` | Skipped URLs with reason |
 | `error.txt` | `url<TAB>stage<TAB>message` | Failed URLs with error |
 | `audit.csv` | CSV | SEO audit results |
+| `html/` | Directory | Cached HTML pages (reused across crawl and audit) |
 
 ## Important Notes
 
 - All flags are optional except `--url` on `project create`
+- Pages fetched during crawl are cached in `state/html/` — audit reuses them automatically, no re-download
+- Delete `state/html/` to force a fresh fetch
 - The crawl-then-audit workflow is intentionally split so URLs can be reviewed/edited between steps
 - `--ignore-ssl` is useful for staging sites with self-signed certificates
 - `isSsr` is a heuristic, not definitive SSR detection

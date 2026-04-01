@@ -1,5 +1,5 @@
 import { writeAuditCsv, appendErrors, ensureDir } from './io/files.js';
-import { fetchPage } from './shared/http.js';
+import { fetchPageCached } from './shared/cache.js';
 import { buildAuditRecord } from './extractors/audit-record.js';
 import { getStatePaths } from './state.js';
 import type { AuditOptions, AuditRecord, ErrorRecord } from './types.js';
@@ -21,11 +21,13 @@ export async function runAudit(inputFile: string, options: AuditOptions): Promis
   const rows: AuditRecord[] = [];
   const errorRecords: ErrorRecord[] = [];
   const stateDir = options.stateDir ?? getStatePaths('state').stateDir;
-  const errorFile = getStatePaths(stateDir).errorFile;
+  const statePaths = getStatePaths(stateDir);
+  const errorFile = statePaths.errorFile;
+  const { htmlDir } = statePaths;
 
   for (const url of urls) {
     try {
-      const page = await fetchPage(url);
+      const page = await fetchPageCached(url, htmlDir);
       rows.push(buildAuditRecord(page, origin));
     } catch (error) {
       errorRecords.push({

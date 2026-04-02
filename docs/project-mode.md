@@ -15,6 +15,7 @@ project sitemap download <name> [url] [--projects-dir] [--max-depth] [--ignore-s
 project sitemap stats <name>        [--projects-dir] [--date]
 project sitemap search <name> <kw>  [--projects-dir] [--date]
 project sitemap audit <name> [url]   [--projects-dir] [--max-depth] [--ignore-ssl]
+project diff <name>                 [--projects-dir] [--from] [--to]
 ```
 
 | Flag | Default | Description |
@@ -25,6 +26,8 @@ project sitemap audit <name> [url]   [--projects-dir] [--max-depth] [--ignore-ss
 | `--max-pages <number>` | `100` | Max pages to crawl |
 | `--max-depth <n>` | `3` | Max sitemap index recursion depth |
 | `--ignore-ssl` | `false` | Skip SSL certificate verification |
+| `--from <date>` | oldest run | Start date for diff range (diff only) |
+| `--to <date>` | latest run | End date for diff range (diff only) |
 
 All flags are **optional** except `--url` on `create`.
 
@@ -144,6 +147,57 @@ node dist/cli.js project sitemap search mysite blog --date 2026-03-28
 
 ---
 
+## Compare Runs (Diff)
+
+Generate a differential audit across all consecutive dated runs:
+
+```bash
+node dist/cli.js project diff mysite
+```
+
+This compares each date folder against the previous one and writes a `diff.csv` into the newer folder. The oldest folder has no diff (nothing to compare against).
+
+Output:
+
+```
+Generating diffs for project "mysite"...
+Generated: 2 diff(s), Skipped: 0 (already exist)
+
+--- Diff: 2026-03-31 ---
+  pages: +2 -1 ~5
+  robots: +0 -0 ~1
+  Total: 9 change(s)
+
+--- Diff: 2026-03-30 ---
+  pages: +3 -0 ~2
+  Total: 5 change(s)
+```
+
+By default, the 2 most recent diffs are displayed. Use `--from` and `--to` to filter:
+
+```bash
+node dist/cli.js project diff mysite --from 2026-03-28 --to 2026-03-30
+```
+
+If a `diff.csv` already exists for a date folder, it is skipped. Delete the file to force re-generation.
+
+### Diff CSV Format
+
+Each `diff.csv` contains one row per change:
+
+| Field | Description |
+|-------|-------------|
+| `resourceType` | `pages`, `robots`, or `sitemap` |
+| `url` | The URL or rule identifier that changed |
+| `changeType` | `added`, `removed`, or `changed` |
+| `field` | Which field changed (for `changed` rows) |
+| `oldValue` | Previous value (empty for `added`) |
+| `newValue` | New value (empty for `removed`) |
+
+Resource types are compared independently. If a resource type (e.g., robots) doesn't exist for a given date, it is skipped gracefully.
+
+---
+
 ## View Run History
 
 ```bash
@@ -180,6 +234,9 @@ node dist/cli.js project pages audit mysite
 
 # Compare: look at yesterday's audit
 node dist/cli.js project pages audit mysite --date yesterday
+
+# Diff: see what changed between runs
+node dist/cli.js project diff mysite
 
 # See all runs
 node dist/cli.js project runs mysite

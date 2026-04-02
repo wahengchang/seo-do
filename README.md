@@ -57,6 +57,7 @@ seo-do pages audit ./state/done.txt
 | `project create/list/delete` | Manage named projects |
 | `project pages crawl/audit <name>` | Crawl and audit a project by name (dated output) |
 | `project sitemap download/stats/search/audit <name>` | Sitemap tools for a project (dated output) |
+| `project diff <name>` | Compare consecutive runs and report changes (diff CSV) |
 | `project runs <name>` | List all past runs for a project |
 
 ```bash

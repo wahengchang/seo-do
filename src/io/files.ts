@@ -1,8 +1,8 @@
 import { mkdir, readFile, writeFile, appendFile } from 'node:fs/promises';
 import { dirname } from 'node:path';
 import { stringify } from 'csv-stringify/sync';
-import { AUDIT_COLUMNS, ROBOTS_COLUMNS } from '../constants.js';
-import type { AuditRecord, ErrorRecord, RobotsDirective, SkippedRecord, StatePaths } from '../types.js';
+import { AUDIT_COLUMNS, DIFF_COLUMNS, ROBOTS_COLUMNS } from '../constants.js';
+import type { AuditRecord, DiffRecord, ErrorRecord, RobotsDirective, SkippedRecord, StatePaths } from '../types.js';
 
 export async function ensureDir(dir: string): Promise<void> {
   await mkdir(dir, { recursive: true });
@@ -70,6 +70,14 @@ export async function writeRobotsCsv(filePath: string, rows: RobotsDirective[]):
   const csv = stringify(rows, {
     header: true,
     columns: ROBOTS_COLUMNS,
+  });
+  await writeFile(filePath, csv, 'utf8');
+}
+
+export async function writeDiffCsv(filePath: string, rows: DiffRecord[]): Promise<void> {
+  const csv = stringify(rows, {
+    header: true,
+    columns: DIFF_COLUMNS,
   });
   await writeFile(filePath, csv, 'utf8');
 }

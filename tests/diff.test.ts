@@ -1,5 +1,9 @@
-import { describe, it, expect } from 'vitest';
-import { diffPages, diffRobots, diffSitemaps } from '../src/diff.js';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { mkdir, writeFile, readFile, rm } from 'node:fs/promises';
+import { join } from 'node:path';
+import { tmpdir } from 'node:os';
+import { diffPages, diffRobots, diffSitemaps, generateProjectDiffs } from '../src/diff.js';
+import { writeDiffCsv } from '../src/io/files.js';
 import type { AuditRecord, RobotsDirective } from '../src/types.js';
 
 function makeAuditRecord(overrides: Partial<AuditRecord> = {}): AuditRecord {
@@ -169,5 +173,170 @@ describe('diffSitemaps', () => {
 
   it('emits nothing for same URLs', () => {
     expect(diffSitemaps(['https://example.com/'], ['https://example.com/'])).toHaveLength(0);
+  });
+});
+
+describe('writeDiffCsv', () => {
+  let tmpDir: string;
+
+  beforeEach(async () => {
+    tmpDir = join(tmpdir(), `diff-test-${Date.now()}-${Math.random().toString(36).slice(2)}`);
+    await mkdir(tmpDir, { recursive: true });
+  });
+
+  afterEach(async () => {
+    await rm(tmpDir, { recursive: true, force: true });
+  });
+
+  it('writes CSV with correct header and rows', async () => {
+    const outPath = join(tmpDir, 'diff.csv');
+    await writeDiffCsv(outPath, [
+      { resourceType: 'pages', url: 'https://example.com/', changeType: 'added', field: '', oldValue: '', newValue: 'https://example.com/' },
+    ]);
+    const content = await readFile(outPath, 'utf8');
+    const lines = content.trim().split('\n');
+    expect(lines[0]).toBe('resourceType,url,changeType,field,oldValue,newValue');
+    expect(lines).toHaveLength(2);
+  });
+});
+
+describe('generateProjectDiffs', () => {
+  let tmpDir: string;
+
+  beforeEach(async () => {
+    tmpDir = join(tmpdir(), `diff-proj-${Date.now()}-${Math.random().toString(36).slice(2)}`);
+    await mkdir(tmpDir, { recursive: true });
+  });
+
+  afterEach(async () => {
+    await rm(tmpDir, { recursive: true, force: true });
+  });
+
+  function writeAuditCsvRaw(dir: string, rows: string): Promise<void> {
+    return writeFile(join(dir, 'audit.csv'), rows, 'utf8');
+  }
+
+  function writeRobotsCsvRaw(dir: string, rows: string): Promise<void> {
+    return writeFile(join(dir, 'robots-audit.csv'), rows, 'utf8');
+  }
+
+  async function writeSitemapXml(dir: string, urls: string[]): Promise<void> {
+    const sitemapsDir = join(dir, 'sitemaps');
+    await mkdir(sitemapsDir, { recursive: true });
+    const xml = `<?xml version="1.0"?>\n<urlset>${urls.map((u) => `<url><loc>${u}</loc></url>`).join('')}</urlset>`;
+    await writeFile(join(sitemapsDir, 'sitemap.xml'), xml, 'utf8');
+  }
+
+  it('produces diff.csv for two date folders with audit.csv', async () => {
+    const older = join(tmpDir, '2026-01-01');
+    const newer = join(tmpDir, '2026-01-02');
+    await mkdir(older, { recursive: true });
+    await mkdir(newer, { recursive: true });
+
+    const header = 'url,title,description,canonical,isRedirect,h1Count,h1Text,h2Count,h2Text,h3Count,h3Text,size,ga4Count,ga4Ids,gtmCount,gtmIds,isBreadcrumb,isBlogPosting,isArticle,isFaq,isLogo,isSsr,countStructureData\n';
+    await writeAuditCsvRaw(older, header + 'https://example.com/,Old Title,Desc,https://example.com/,FALSE,1,Hello,0,,0,,1234,0,,0,,FALSE,FALSE,FALSE,FALSE,FALSE,TRUE,0\n');
+    await writeAuditCsvRaw(newer, header + 'https://example.com/,New Title,Desc,https://example.com/,FALSE,1,Hello,0,,0,,1234,0,,0,,FALSE,FALSE,FALSE,FALSE,FALSE,TRUE,0\n');
+
+    const result = await generateProjectDiffs(tmpDir);
+    expect(result.generated).toHaveLength(1);
+    expect(result.generated[0]).toContain('2026-01-02');
+
+    const diffContent = await readFile(join(newer, 'diff.csv'), 'utf8');
+    expect(diffContent).toContain('changed');
+    expect(diffContent).toContain('title');
+  });
+
+  it('returns empty for single date folder', async () => {
+    await mkdir(join(tmpDir, '2026-01-01'), { recursive: true });
+    const result = await generateProjectDiffs(tmpDir);
+    expect(result.generated).toHaveLength(0);
+    expect(result.skipped).toHaveLength(0);
+  });
+
+  it('skips when diff.csv already exists', async () => {
+    const older = join(tmpDir, '2026-01-01');
+    const newer = join(tmpDir, '2026-01-02');
+    await mkdir(older, { recursive: true });
+    await mkdir(newer, { recursive: true });
+
+    const header = 'url,title,description,canonical,isRedirect,h1Count,h1Text,h2Count,h2Text,h3Count,h3Text,size,ga4Count,ga4Ids,gtmCount,gtmIds,isBreadcrumb,isBlogPosting,isArticle,isFaq,isLogo,isSsr,countStructureData\n';
+    await writeAuditCsvRaw(older, header + 'https://example.com/,Title,Desc,https://example.com/,FALSE,1,Hello,0,,0,,1234,0,,0,,FALSE,FALSE,FALSE,FALSE,FALSE,TRUE,0\n');
+    await writeAuditCsvRaw(newer, header + 'https://example.com/,Title,Desc,https://example.com/,FALSE,1,Hello,0,,0,,1234,0,,0,,FALSE,FALSE,FALSE,FALSE,FALSE,TRUE,0\n');
+
+    // Pre-create diff.csv
+    await writeFile(join(newer, 'diff.csv'), 'existing', 'utf8');
+
+    const result = await generateProjectDiffs(tmpDir);
+    expect(result.generated).toHaveLength(0);
+    expect(result.skipped).toHaveLength(1);
+  });
+
+  it('skips pages comparison when audit.csv is missing', async () => {
+    const older = join(tmpDir, '2026-01-01');
+    const newer = join(tmpDir, '2026-01-02');
+    await mkdir(older, { recursive: true });
+    await mkdir(newer, { recursive: true });
+
+    // Only newer has audit.csv, older does not
+    const header = 'url,title,description,canonical,isRedirect,h1Count,h1Text,h2Count,h2Text,h3Count,h3Text,size,ga4Count,ga4Ids,gtmCount,gtmIds,isBreadcrumb,isBlogPosting,isArticle,isFaq,isLogo,isSsr,countStructureData\n';
+    await writeAuditCsvRaw(newer, header + 'https://example.com/,Title,Desc,https://example.com/,FALSE,1,Hello,0,,0,,1234,0,,0,,FALSE,FALSE,FALSE,FALSE,FALSE,TRUE,0\n');
+
+    const result = await generateProjectDiffs(tmpDir);
+    expect(result.generated).toHaveLength(1);
+    // diff.csv should exist but be empty (only header) since pages was skipped and no robots/sitemap
+    const diffContent = await readFile(join(newer, 'diff.csv'), 'utf8');
+    expect(diffContent).toContain('resourceType');
+  });
+
+  it('skips robots comparison when robots CSV is missing', async () => {
+    const older = join(tmpDir, '2026-01-01');
+    const newer = join(tmpDir, '2026-01-02');
+    await mkdir(older, { recursive: true });
+    await mkdir(newer, { recursive: true });
+
+    // No robots-audit.csv in either folder, no audit.csv either
+    const result = await generateProjectDiffs(tmpDir);
+    expect(result.generated).toHaveLength(1);
+  });
+
+  it('skips sitemap comparison when sitemaps dir is missing', async () => {
+    const older = join(tmpDir, '2026-01-01');
+    const newer = join(tmpDir, '2026-01-02');
+    await mkdir(older, { recursive: true });
+    await mkdir(newer, { recursive: true });
+
+    // No sitemaps directory
+    const result = await generateProjectDiffs(tmpDir);
+    expect(result.generated).toHaveLength(1);
+  });
+
+  it('handles robots diff between two folders', async () => {
+    const older = join(tmpDir, '2026-01-01');
+    const newer = join(tmpDir, '2026-01-02');
+    await mkdir(older, { recursive: true });
+    await mkdir(newer, { recursive: true });
+
+    await writeRobotsCsvRaw(older, 'userAgent,directive,value\n*,Disallow,/old\n');
+    await writeRobotsCsvRaw(newer, 'userAgent,directive,value\n*,Disallow,/new\n');
+
+    const result = await generateProjectDiffs(tmpDir);
+    expect(result.generated).toHaveLength(1);
+    const diffContent = await readFile(join(newer, 'diff.csv'), 'utf8');
+    expect(diffContent).toContain('robots');
+  });
+
+  it('handles sitemap diff between two folders', async () => {
+    const older = join(tmpDir, '2026-01-01');
+    const newer = join(tmpDir, '2026-01-02');
+    await mkdir(older, { recursive: true });
+    await mkdir(newer, { recursive: true });
+
+    await writeSitemapXml(older, ['https://example.com/a']);
+    await writeSitemapXml(newer, ['https://example.com/b']);
+
+    const result = await generateProjectDiffs(tmpDir);
+    expect(result.generated).toHaveLength(1);
+    const diffContent = await readFile(join(newer, 'diff.csv'), 'utf8');
+    expect(diffContent).toContain('sitemap');
   });
 });

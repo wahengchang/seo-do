@@ -59,6 +59,15 @@ export interface RobotsDirective {
   value: string;
 }
 
+export interface DiffRecord {
+  resourceType: 'pages' | 'robots' | 'sitemap';
+  url: string;
+  changeType: 'added' | 'removed' | 'changed';
+  field: string;
+  oldValue: string;
+  newValue: string;
+}
+
 export interface AuditRecord {
   url: string;
   title: string;

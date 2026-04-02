@@ -13,6 +13,8 @@ import type { SitemapFile } from '../sitemap-download.js';
 import { parseSitemapXml, isSitemapIndex } from '../shared/sitemap.js';
 import { runAudit } from '../audit.js';
 import { closeBrowser } from '../shared/http.js';
+import { generateProjectDiffs } from '../diff.js';
+import { parse } from 'csv-parse/sync';
 
 export function projectCommand(): Command {
   const project = new Command('project').description('Manage named SEO projects');
@@ -357,6 +359,112 @@ export function projectCommand(): Command {
     );
 
   project.addCommand(sitemap);
+
+  // diff subcommand
+  project
+    .command('diff')
+    .argument('<name>', 'project name')
+    .option('--projects-dir <path>', 'projects directory', './projects')
+    .option('--from <date>', 'start date filter (YYYY-MM-DD, "yesterday", "last-week")')
+    .option('--to <date>', 'end date filter (YYYY-MM-DD, "yesterday", "last-week")')
+    .description('Generate and display diffs between chronological project snapshots')
+    .action(async (name: string, options: { projectsDir: string; from?: string; to?: string }) => {
+      try {
+        const projectsDir = path.resolve(options.projectsDir);
+        await loadProject(name, projectsDir);
+        const projectDir = path.join(projectsDir, name);
+
+        // Step 1: Generate all missing diffs
+        console.log(`Generating diffs for project "${name}"...`);
+        const result = await generateProjectDiffs(projectDir);
+
+        if (result.generated.length === 0 && result.skipped.length === 0) {
+          console.log('No diffs to generate (need at least 2 dated runs).');
+          return;
+        }
+
+        console.log(`Generated: ${result.generated.length} diff(s), Skipped: ${result.skipped.length} (already exist)`);
+
+        // Step 2: Read and display diffs
+        const entries = await readdir(projectDir, { withFileTypes: true });
+        const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+        let diffFolders = entries
+          .filter((e) => e.isDirectory() && DATE_RE.test(e.name))
+          .map((e) => e.name)
+          .sort();
+
+        // Apply --from / --to filters
+        if (options.from) {
+          const fromDate = options.from === 'yesterday'
+            ? new Date(Date.now() - 86400000).toISOString().slice(0, 10)
+            : options.from === 'last-week'
+              ? new Date(Date.now() - 7 * 86400000).toISOString().slice(0, 10)
+              : options.from;
+          diffFolders = diffFolders.filter((d) => d >= fromDate);
+        }
+        if (options.to) {
+          const toDate = options.to === 'yesterday'
+            ? new Date(Date.now() - 86400000).toISOString().slice(0, 10)
+            : options.to === 'last-week'
+              ? new Date(Date.now() - 7 * 86400000).toISOString().slice(0, 10)
+              : options.to;
+          diffFolders = diffFolders.filter((d) => d <= toDate);
+        }
+
+        // Filter to only folders that have diff.csv
+        const foldersWithDiff: string[] = [];
+        for (const folder of diffFolders) {
+          try {
+            await access(path.join(projectDir, folder, 'diff.csv'));
+            foldersWithDiff.push(folder);
+          } catch {
+            // no diff.csv in this folder
+          }
+        }
+
+        if (foldersWithDiff.length === 0) {
+          console.log('No diffs available for the specified date range.');
+          return;
+        }
+
+        // Default: show most recent 2 diffs
+        const displayFolders = (!options.from && !options.to)
+          ? foldersWithDiff.slice(-2)
+          : foldersWithDiff;
+
+        for (const folder of displayFolders) {
+          const diffPath = path.join(projectDir, folder, 'diff.csv');
+          const csvContent = await readFile(diffPath, 'utf8');
+          const records = parse(csvContent, { columns: true }) as Array<Record<string, string>>;
+
+          console.log(`\n--- Diff: ${folder} ---`);
+          if (records.length === 0) {
+            console.log('  No changes detected.');
+            continue;
+          }
+
+          // Group by resourceType for display
+          const byType = new Map<string, Array<Record<string, string>>>();
+          for (const rec of records) {
+            const arr = byType.get(rec.resourceType) ?? [];
+            arr.push(rec);
+            byType.set(rec.resourceType, arr);
+          }
+
+          for (const [resType, recs] of byType) {
+            const added = recs.filter((r) => r.changeType === 'added').length;
+            const removed = recs.filter((r) => r.changeType === 'removed').length;
+            const changed = recs.filter((r) => r.changeType === 'changed').length;
+            console.log(`  ${resType}: +${added} -${removed} ~${changed}`);
+          }
+          console.log(`  Total: ${records.length} change(s)`);
+        }
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        process.stderr.write('Error: ' + message + '\n');
+        process.exitCode = 1;
+      }
+    });
 
   return project;
 }

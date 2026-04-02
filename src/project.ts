@@ -115,17 +115,13 @@ export async function listRuns(name: string, projectsDir: string): Promise<RunIn
     const names = new Set(contents.map((e) => e.name));
     const hasPagesArtifact = names.has('done.txt') || names.has('audit.csv');
     const hasSitemaps = contents.some((e) => e.isDirectory() && e.name === 'sitemaps');
+    const hasRobots = names.has('robots.txt') || names.has('robots-audit.csv');
 
-    let type: string;
-    if (hasPagesArtifact && hasSitemaps) {
-      type = 'pages+sitemap';
-    } else if (hasPagesArtifact) {
-      type = 'pages';
-    } else if (hasSitemaps) {
-      type = 'sitemap';
-    } else {
-      type = 'empty';
-    }
+    const detectedTypes: string[] = [];
+    if (hasPagesArtifact) detectedTypes.push('pages');
+    if (hasSitemaps) detectedTypes.push('sitemap');
+    if (hasRobots) detectedTypes.push('robots');
+    const type = detectedTypes.length > 0 ? detectedTypes.join('+') : 'empty';
 
     runs.push({
       date: dir.name,

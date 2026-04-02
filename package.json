@@ -1,6 +1,6 @@
 {
   "name": "seo-do",
-  "version": "2.0.3",
+  "version": "2.1.1",
   "description": "CLI tool for crawling, auditing, and analyzing SEO signals on small websites",
   "type": "module",
   "main": "dist/index.js",
@@ -27,7 +27,8 @@
     "cli",
     "crawler",
     "audit",
-    "sitemap"
+    "sitemap",
+    "robots"
   ],
   "author": "wahengchang",
   "license": "MIT",

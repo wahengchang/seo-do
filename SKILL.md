@@ -45,7 +45,19 @@ seo-do pages audit <file> [--output ./state/audit.csv] [--origin <url>]
 
 Output: `./state/audit.csv`
 
-### 3. Sitemap Tools
+### 3. Robots.txt Tools
+
+```bash
+seo-do robots download <url> [--output ./state/robots.txt] [--ignore-ssl]
+seo-do robots audit <url> [--output ./state/robots-audit.csv] [--ignore-ssl]
+```
+
+- `robots download`: Fetches robots.txt and saves the raw content
+- `robots audit`: Fetches robots.txt, parses all directives (User-agent, Disallow, Allow, Sitemap, Crawl-delay), and outputs a structured CSV
+
+The `<url>` can be a domain (`https://example.com`) or a full robots.txt URL (`https://example.com/robots.txt`).
+
+### 4. Sitemap Tools
 
 ```bash
 seo-do sitemap download <sitemap-url> [--output-dir ./state/sitemaps] [--max-depth 3] [--ignore-ssl]
@@ -56,7 +68,7 @@ seo-do sitemap audit <sitemap-url> [--output ./state/sitemap-audit.csv] [--max-d
 
 `sitemap audit` is an all-in-one command: downloads sitemap, extracts URLs, audits each, outputs CSV.
 
-### 4. Project Mode (Recurring Audits)
+### 5. Project Mode (Recurring Audits)
 
 Manage named projects with dated run history:
 
@@ -91,6 +103,13 @@ seo-do pages audit ./state/done.txt
 ```bash
 seo-do sitemap audit https://www.example.com/sitemap.xml
 # Result: ./state/sitemap-audit.csv
+```
+
+### Robots.txt Audit
+
+```bash
+seo-do robots audit https://www.example.com
+# Result: ./state/robots-audit.csv (columns: userAgent, directive, value)
 ```
 
 ### Recurring Audit with Project Mode

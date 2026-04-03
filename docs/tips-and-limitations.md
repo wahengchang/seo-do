@@ -61,6 +61,22 @@ node dist/cli.js project pages audit mysite --date yesterday
 
 See [Project Mode](./project-mode.md) for the full workflow.
 
+### Track Changes Between Runs with Diff
+
+After running audits on multiple dates, generate a diff to see exactly what changed:
+
+```bash
+node dist/cli.js project diff mysite
+```
+
+This compares pages, robots, and sitemaps between consecutive dated runs and writes a `diff.csv` into each newer folder. Use `--from` and `--to` to filter the date range:
+
+```bash
+node dist/cli.js project diff mysite --from 2026-03-28 --to 2026-03-31
+```
+
+See [Project Mode](./project-mode.md) for diff CSV format details.
+
 ### Skip SSL Errors
 
 Some staging or internal sites have self-signed certificates:

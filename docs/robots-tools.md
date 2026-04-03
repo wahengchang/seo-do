@@ -9,7 +9,7 @@ Download and audit robots.txt files from any website.
 Fetch a site's robots.txt and save it locally:
 
 ```bash
-seo-do robots download https://www.example.com
+node dist/cli.js robots download https://www.example.com
 ```
 
 Output: `./state/robots.txt`
@@ -26,7 +26,7 @@ Options:
 Fetch robots.txt, parse all directives, and export as CSV:
 
 ```bash
-seo-do robots audit https://www.example.com
+node dist/cli.js robots audit https://www.example.com
 ```
 
 Output: `./state/robots-audit.csv`
@@ -44,8 +44,8 @@ You can pass either a domain or a full robots.txt URL:
 
 ```bash
 # These are equivalent:
-seo-do robots download https://www.example.com
-seo-do robots download https://www.example.com/robots.txt
+node dist/cli.js robots download https://www.example.com
+node dist/cli.js robots download https://www.example.com/robots.txt
 ```
 
 ## Audit CSV Output
@@ -65,7 +65,7 @@ Sitemap directives appear with an empty `userAgent` since they are global.
 ### Quick check what a site blocks
 
 ```bash
-seo-do robots audit https://www.example.com
+node dist/cli.js robots audit https://www.example.com
 # Open ./state/robots-audit.csv in a spreadsheet
 # Filter by directive = "Disallow" to see blocked paths
 ```
@@ -73,8 +73,8 @@ seo-do robots audit https://www.example.com
 ### Save robots.txt for comparison
 
 ```bash
-seo-do robots download https://www.example.com --output ./robots-before.txt
+node dist/cli.js robots download https://www.example.com --output ./robots-before.txt
 # ... wait for changes ...
-seo-do robots download https://www.example.com --output ./robots-after.txt
+node dist/cli.js robots download https://www.example.com --output ./robots-after.txt
 diff ./robots-before.txt ./robots-after.txt
 ```

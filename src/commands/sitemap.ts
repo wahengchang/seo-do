@@ -29,7 +29,7 @@ export function sitemapCommand(): Command {
     .command('download')
     .argument('<sitemap-url>', 'root sitemap URL to fetch recursively')
     .option('--output-dir <path>', 'folder to save XML files', './state/sitemaps')
-    .option('--max-depth <n>', 'maximum sitemap index recursion depth', '3')
+    .option('--max-depth <n>', 'maximum sitemap index recursion depth', '99')
     .option('--ignore-ssl', 'skip SSL certificate verification', false)
     .action(async (url: string, options: { outputDir: string; maxDepth: string; ignoreSsl: boolean }) => {
       const outputDir = path.resolve(options.outputDir);
@@ -112,7 +112,7 @@ export function sitemapCommand(): Command {
     .argument('<sitemap-url>', 'root sitemap URL to fetch and audit all discovered URLs')
     .option('--output <file>', 'CSV output file', './state/sitemap-audit.csv')
     .option('--output-dir <path>', 'folder to save XML files', './state/sitemaps')
-    .option('--max-depth <n>', 'maximum sitemap index recursion depth', '3')
+    .option('--max-depth <n>', 'maximum sitemap index recursion depth', '99')
     .option('--ignore-ssl', 'skip SSL certificate verification', false)
     .action(async (url: string, options: { output: string; outputDir: string; maxDepth: string; ignoreSsl: boolean }) => {
       const outputDir = path.resolve(options.outputDir);

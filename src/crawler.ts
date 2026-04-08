@@ -137,7 +137,7 @@ function isXmlContent(page: { contentType: string; body: string }): boolean {
 }
 
 async function fetchSitemapUrls(sitemapUrl: string, maxUrls: number, depth: number = 0): Promise<string[]> {
-  const maxDepth = 3;
+  const maxDepth = 99;
   if (depth > maxDepth) {
     console.log(`[sitemap] max depth ${maxDepth} reached, skipping ${sitemapUrl}`);
     return [];

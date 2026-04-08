@@ -24,7 +24,7 @@ project diff <name>                 [--projects-dir] [--from] [--to]
 | `--url <url>` | (required) | Root URL for the project (create only) |
 | `--date <date>` | latest run | Date lookup: `2026-03-30`, `yesterday`, `last-week` |
 | `--max-pages <number>` | `100` | Max pages to crawl |
-| `--max-depth <n>` | `3` | Max sitemap index recursion depth |
+| `--max-depth <n>` | `99` | Max sitemap index recursion depth |
 | `--ignore-ssl` | `false` | Skip SSL certificate verification |
 | `--from <date>` | oldest run | Start date for diff range (diff only) |
 | `--to <date>` | latest run | End date for diff range (diff only) |

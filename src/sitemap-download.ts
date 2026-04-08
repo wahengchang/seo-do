@@ -56,7 +56,7 @@ function urlToFilename(url: string, index: number): string {
 export async function runSitemapDownload(
   rootUrl: string,
   outputDir: string,
-  maxDepth: number = 3,
+  maxDepth: number = 99,
 ): Promise<SitemapFile[]> {
   await ensureDir(outputDir);
   const files: SitemapFile[] = [];

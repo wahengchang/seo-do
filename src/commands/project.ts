@@ -179,7 +179,7 @@ export function projectCommand(): Command {
     .argument('<name>', 'project name')
     .argument('[sitemap-url]', 'sitemap URL (defaults to <project-url>/sitemap.xml)')
     .option('--projects-dir <path>', 'projects directory', './projects')
-    .option('--max-depth <n>', 'maximum sitemap index recursion depth', '3')
+    .option('--max-depth <n>', 'maximum sitemap index recursion depth', '99')
     .option('--ignore-ssl', 'skip SSL certificate verification', false)
     .action(
       async (name: string, sitemapUrlArg: string | undefined, options: { projectsDir: string; maxDepth: string; ignoreSsl: boolean }) => {
@@ -303,7 +303,7 @@ export function projectCommand(): Command {
     .argument('<name>', 'project name')
     .argument('[sitemap-url]', 'sitemap URL (defaults to <project-url>/sitemap.xml)')
     .option('--projects-dir <path>', 'projects directory', './projects')
-    .option('--max-depth <n>', 'maximum sitemap index recursion depth', '3')
+    .option('--max-depth <n>', 'maximum sitemap index recursion depth', '99')
     .option('--ignore-ssl', 'skip SSL certificate verification', false)
     .action(
       async (name: string, sitemapUrlArg: string | undefined, options: { projectsDir: string; maxDepth: string; ignoreSsl: boolean }) => {

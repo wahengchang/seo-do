@@ -60,10 +60,10 @@ The `<url>` can be a domain (`https://example.com`) or a full robots.txt URL (`h
 ### 4. Sitemap Tools
 
 ```bash
-seo-do sitemap download <sitemap-url> [--output-dir ./state/sitemaps] [--max-depth 3] [--ignore-ssl]
+seo-do sitemap download <sitemap-url> [--output-dir ./state/sitemaps] [--max-depth 99] [--ignore-ssl]
 seo-do sitemap stats [--dir ./state/sitemaps]
 seo-do sitemap search <keyword> [--dir ./state/sitemaps]
-seo-do sitemap audit <sitemap-url> [--output ./state/sitemap-audit.csv] [--max-depth 3] [--ignore-ssl]
+seo-do sitemap audit <sitemap-url> [--output ./state/sitemap-audit.csv] [--max-depth 99] [--ignore-ssl]
 ```
 
 `sitemap audit` is an all-in-one command: downloads sitemap, extracts URLs, audits each, outputs CSV.

@@ -12,5 +12,6 @@ projects.json
 .planning/
 *.txt
 *.csv
-.claude/
+.claude/*
+!.claude/agents/
 *.xml

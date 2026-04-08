@@ -106,7 +106,7 @@ describe('project sitemap download', () => {
     expect(runSitemapDownloadMock).toHaveBeenCalledWith(
       'https://example.com/sitemap.xml',
       '/tmp/projects/mysite/2026-03-31/sitemaps/',
-      3, // default max-depth
+      99, // default max-depth
     );
   });
 
@@ -374,7 +374,7 @@ describe('project sitemap audit', () => {
     expect(runSitemapDownloadMock).toHaveBeenCalledWith(
       'https://example.com/sitemap.xml',
       '/tmp/projects/mysite/2026-03-31/sitemaps/',
-      3,
+      99,
     );
   });
 

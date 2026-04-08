@@ -14,7 +14,7 @@ sitemap audit    <sitemap-url>  [--output] [--output-dir] [--max-depth] [--ignor
 | Flag | Default | Applies to | Description |
 |------|---------|------------|-------------|
 | `--output-dir <path>` | `./state/sitemaps` | `download`, `audit` | Directory to save XML files |
-| `--max-depth <n>` | `3` | `download`, `audit` | Max `<sitemapindex>` recursion depth |
+| `--max-depth <n>` | `99` | `download`, `audit` | Max `<sitemapindex>` recursion depth |
 | `--ignore-ssl` | `false` | `download`, `audit` | Skip SSL certificate verification |
 | `--dir <path>` | `./state/sitemaps` | `stats`, `search` | Directory containing downloaded XML files |
 | `--output <file>` | `./state/sitemap-audit.csv` | `audit` | Audit CSV output path |
@@ -38,7 +38,7 @@ All flags are **optional**.
 | Flag | Default | Description |
 |------|---------|-------------|
 | `--output-dir` | `./state/sitemaps` | Where to save XML files |
-| `--max-depth` | `3` | Max recursion depth for sitemap indexes (how many levels of `<sitemapindex>` to follow) |
+| `--max-depth` | `99` | Max recursion depth for sitemap indexes (how many levels of `<sitemapindex>` to follow) |
 | `--ignore-ssl` | `false` | Skip SSL certificate verification (useful for staging/self-signed certs) |
 
 Result:
@@ -96,7 +96,7 @@ All flags are **optional**.
 |------|---------|-------------|
 | `--output` | `./state/sitemap-audit.csv` | Audit CSV path |
 | `--output-dir` | `./state/sitemaps` | Where to save XML files |
-| `--max-depth` | `3` | Max recursion depth for sitemap indexes |
+| `--max-depth` | `99` | Max recursion depth for sitemap indexes |
 | `--ignore-ssl` | `false` | Skip SSL certificate verification |
 
 ## Example: Download First, Then Audit

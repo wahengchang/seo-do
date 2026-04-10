@@ -1,8 +1,8 @@
 import { mkdir, readFile, writeFile, appendFile } from 'node:fs/promises';
 import { dirname } from 'node:path';
 import { stringify } from 'csv-stringify/sync';
-import { AUDIT_COLUMNS, DIFF_COLUMNS, ROBOTS_COLUMNS } from '../constants.js';
-import type { AuditRecord, DiffRecord, ErrorRecord, RobotsDirective, SkippedRecord, StatePaths } from '../types.js';
+import { AUDIT_COLUMNS, DIFF_COLUMNS, ROBOTS_COLUMNS, SITEMAP_AUDIT_COLUMNS } from '../constants.js';
+import type { AuditRecord, DiffRecord, ErrorRecord, RobotsDirective, SitemapAuditRecord, SkippedRecord, StatePaths } from '../types.js';
 
 export async function ensureDir(dir: string): Promise<void> {
   await mkdir(dir, { recursive: true });
@@ -56,6 +56,14 @@ export async function appendErrors(filePath: string, records: ErrorRecord[]): Pr
     filePath,
     records.map((record) => `${record.url}\t${record.stage}\t${record.message}`),
   );
+}
+
+export async function writeSitemapAuditCsv(filePath: string, rows: SitemapAuditRecord[]): Promise<void> {
+  const csv = stringify(rows, {
+    header: true,
+    columns: SITEMAP_AUDIT_COLUMNS,
+  });
+  await writeFile(filePath, csv, 'utf8');
 }
 
 export async function writeAuditCsv(filePath: string, rows: AuditRecord[]): Promise<void> {

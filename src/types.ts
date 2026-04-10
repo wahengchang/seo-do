@@ -68,6 +68,20 @@ export interface DiffRecord {
   newValue: string;
 }
 
+export interface SitemapAuditRecord {
+  url: string;
+  sitemapFile: string;
+  lastmod: string;
+  changefreq: string;
+  priority: string;
+  hreflangCount: number;
+  hreflangValues: string;
+  isDuplicate: 'TRUE' | 'FALSE';
+  isUtf8: 'TRUE' | 'FALSE';
+  isValidXml: 'TRUE' | 'FALSE';
+  hasValidNamespace: 'TRUE' | 'FALSE';
+}
+
 export interface AuditRecord {
   url: string;
   title: string;

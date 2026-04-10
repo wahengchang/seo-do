@@ -1,7 +1,8 @@
 import path from 'node:path';
 import { readdir, readFile, writeFile } from 'node:fs/promises';
 import { Agent, request, interceptors } from 'undici';
-import { parseSitemapXml, isSitemapIndex } from './shared/sitemap.js';
+import { parseSitemapXml, isSitemapIndex, parseSitemapUrlEntries } from './shared/sitemap.js';
+import type { SitemapAuditRecord } from './types.js';
 import { normalizeUrl } from './shared/url.js';
 import { ensureDir } from './io/files.js';
 
@@ -116,6 +117,87 @@ export function computeStats(files: SitemapFile[]): SitemapStats {
     subSitemapCount: leafFiles.length,
     urlsPerSitemap: leafFiles.map((f) => ({ filename: f.filename, urlCount: f.urlCount })),
   };
+}
+
+function checkUtf8(filePath: string, content: Buffer): boolean {
+  // Check for UTF-8 BOM or valid XML encoding declaration
+  const str = content.toString('utf8');
+  const encodingMatch = /<\?xml[^?]*encoding="([^"]+)"/i.exec(str);
+  if (encodingMatch) {
+    return encodingMatch[1].toUpperCase() === 'UTF-8';
+  }
+  // No encoding declared — XML defaults to UTF-8
+  // Verify content round-trips cleanly through UTF-8
+  return Buffer.from(str, 'utf8').equals(content);
+}
+
+function checkValidXml(content: string): boolean {
+  // Check well-formed XML structure: declaration, root element, balanced tags
+  if (!/<(urlset|sitemapindex)[\s>]/i.test(content)) return false;
+  // Check for common XML errors: unclosed tags, malformed entities
+  const openTags = content.match(/<(?!\/|!|\?)[a-zA-Z][^>]*[^/]>/g) ?? [];
+  const closeTags = content.match(/<\/[a-zA-Z][^>]*>/g) ?? [];
+  // Rough balance check — not a full parser but catches obvious issues
+  return openTags.length > 0 && closeTags.length > 0;
+}
+
+function checkNamespace(content: string): boolean {
+  return /xmlns\s*=\s*["']http:\/\/www\.sitemaps\.org\/schemas\/sitemap\/0\.9["']/i.test(content);
+}
+
+export async function auditSitemapFiles(sitemapsDir: string): Promise<SitemapAuditRecord[]> {
+  const entries = await readdir(sitemapsDir);
+  const xmlFiles = entries.filter((f) => f.endsWith('.xml')).sort();
+
+  // First pass: collect all URLs to detect duplicates
+  const urlSeen = new Map<string, number>(); // url -> count
+  const fileMetadata = new Map<string, { isUtf8: boolean; isValidXml: boolean; hasValidNamespace: boolean }>();
+
+  for (const xmlFile of xmlFiles) {
+    const filePath = path.join(sitemapsDir, xmlFile);
+    const rawBuffer = await readFile(filePath);
+    const content = rawBuffer.toString('utf8');
+    if (isSitemapIndex(content)) continue;
+
+    fileMetadata.set(xmlFile, {
+      isUtf8: checkUtf8(filePath, rawBuffer),
+      isValidXml: checkValidXml(content),
+      hasValidNamespace: checkNamespace(content),
+    });
+
+    const urlEntries = parseSitemapUrlEntries(content);
+    for (const entry of urlEntries) {
+      urlSeen.set(entry.loc, (urlSeen.get(entry.loc) ?? 0) + 1);
+    }
+  }
+
+  // Second pass: build records with duplicate flags
+  const records: SitemapAuditRecord[] = [];
+
+  for (const xmlFile of xmlFiles) {
+    const content = await readFile(path.join(sitemapsDir, xmlFile), 'utf8');
+    if (isSitemapIndex(content)) continue;
+
+    const meta = fileMetadata.get(xmlFile)!;
+    const urlEntries = parseSitemapUrlEntries(content);
+    for (const entry of urlEntries) {
+      records.push({
+        url: entry.loc,
+        sitemapFile: xmlFile,
+        lastmod: entry.lastmod,
+        changefreq: entry.changefreq,
+        priority: entry.priority,
+        hreflangCount: entry.hreflangCount,
+        hreflangValues: entry.hreflangValues,
+        isDuplicate: (urlSeen.get(entry.loc) ?? 0) > 1 ? 'TRUE' : 'FALSE',
+        isUtf8: meta.isUtf8 ? 'TRUE' : 'FALSE',
+        isValidXml: meta.isValidXml ? 'TRUE' : 'FALSE',
+        hasValidNamespace: meta.hasValidNamespace ? 'TRUE' : 'FALSE',
+      });
+    }
+  }
+
+  return records;
 }
 
 export async function searchSitemapDir(

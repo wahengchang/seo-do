@@ -127,9 +127,11 @@ node dist/cli.js project sitemap stats mysite
 # Search for URLs
 node dist/cli.js project sitemap search mysite pricing
 
-# Full sitemap audit
+# Audit sitemap structure and metadata
 node dist/cli.js project sitemap audit mysite
 ```
+
+`project sitemap audit` downloads the sitemap XML files and audits each `<url>` entry for metadata, encoding, and duplicates. It does not fetch the listed pages. Output goes to `projects/<name>/<date>/sitemap-audit.csv`.
 
 Sitemap files go in `projects/<name>/<date>/sitemaps/`. The sitemap URL defaults to `<project-url>/sitemap.xml`, but you can provide a custom one:
 

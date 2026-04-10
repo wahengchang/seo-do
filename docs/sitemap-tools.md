@@ -80,9 +80,9 @@ Matches:  3
   [02-sitemap-blog.xml] https://www.example.com/blog/best-price-guide
 ```
 
-## Audit from Sitemap (All-in-One)
+## Audit Sitemap Structure
 
-Download sitemap, extract URLs, run SEO audit, output CSV -- in one command:
+Download sitemaps and audit each `<url>` entry for metadata, encoding, and duplicates — no HTTP requests to the listed pages:
 
 ```bash
 node dist/cli.js sitemap audit https://www.example.com/sitemap.xml
@@ -98,6 +98,26 @@ All flags are **optional**.
 | `--output-dir` | `./state/sitemaps` | Where to save XML files |
 | `--max-depth` | `99` | Max recursion depth for sitemap indexes |
 | `--ignore-ssl` | `false` | Skip SSL certificate verification |
+
+Output: `sitemap-audit.csv`
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `url` | string | URL from `<loc>` |
+| `sitemapFile` | string | XML file the entry came from |
+| `lastmod` | string | `<lastmod>` value |
+| `changefreq` | string | `<changefreq>` value |
+| `priority` | string | `<priority>` value |
+| `hreflangCount` | number | Number of hreflang alternate links |
+| `hreflangValues` | string | Hreflang codes (comma-joined) |
+| `isDuplicate` | TRUE/FALSE | TRUE if URL appears more than once across all sitemaps |
+| `isUtf8` | TRUE/FALSE | TRUE if the sitemap file is UTF-8 encoded |
+| `isValidXml` | TRUE/FALSE | TRUE if well-formed XML with a root element |
+| `hasValidNamespace` | TRUE/FALSE | TRUE if the correct `xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"` is present |
+
+**Notes:**
+- This command audits the sitemap XML files themselves — it does not fetch or audit the pages listed inside them
+- Use `pages audit` or `pages crawl` to run a full SEO audit on page content
 
 ## Example: Download First, Then Audit
 

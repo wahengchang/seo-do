@@ -7,6 +7,7 @@ vi.mock('../src/sitemap-download.js', () => ({
   runSitemapDownload: vi.fn().mockResolvedValue([]),
   computeStats: vi.fn().mockReturnValue({ totalUrls: 0, subSitemapCount: 0, urlsPerSitemap: [] }),
   grepSitemapDir: vi.fn().mockResolvedValue({ matchCount: 0, matches: [] }),
+  auditSitemapFiles: vi.fn().mockResolvedValue([]),
   setIgnoreSsl: vi.fn(),
 }));
 vi.mock('../src/audit.js', () => ({
@@ -29,6 +30,7 @@ vi.mock('../src/io/files.js', () => ({
   appendSkipped: vi.fn().mockResolvedValue(undefined),
   appendErrors: vi.fn().mockResolvedValue(undefined),
   writeAuditCsv: vi.fn().mockResolvedValue(undefined),
+  writeSitemapAuditCsv: vi.fn().mockResolvedValue(undefined),
   readLines: vi.fn().mockResolvedValue([]),
   writeLines: vi.fn().mockResolvedValue(undefined),
 }));
@@ -50,11 +52,11 @@ vi.mock('node:fs/promises', async (importOriginal) => {
   };
 });
 
-import { runSitemapDownload, computeStats, grepSitemapDir } from '../src/sitemap-download.js';
+import { runSitemapDownload, computeStats, grepSitemapDir, auditSitemapFiles } from '../src/sitemap-download.js';
 import { runAudit } from '../src/audit.js';
 import { loadProject } from '../src/project.js';
 import { todayDateStr, resolveDate } from '../src/date-resolver.js';
-import { ensureDir } from '../src/io/files.js';
+import { ensureDir, writeSitemapAuditCsv } from '../src/io/files.js';
 import { closeBrowser } from '../src/shared/http.js';
 import { parseSitemapXml, isSitemapIndex } from '../src/shared/sitemap.js';
 import { readdir, readFile, writeFile } from 'node:fs/promises';
@@ -63,7 +65,9 @@ import { projectCommand } from '../src/commands/project.js';
 const runSitemapDownloadMock = vi.mocked(runSitemapDownload);
 const computeStatsMock = vi.mocked(computeStats);
 const grepSitemapDirMock = vi.mocked(grepSitemapDir);
+const auditSitemapFilesMock = vi.mocked(auditSitemapFiles);
 const runAuditMock = vi.mocked(runAudit);
+const writeSitemapAuditCsvMock = vi.mocked(writeSitemapAuditCsv);
 const loadProjectMock = vi.mocked(loadProject);
 const todayDateStrMock = vi.mocked(todayDateStr);
 const resolveDateMock = vi.mocked(resolveDate);
@@ -361,6 +365,21 @@ describe('project sitemap audit', () => {
     readFileMock.mockResolvedValue('<urlset>...</urlset>' as unknown as Buffer);
     writeFileMock.mockResolvedValue(undefined);
     runAuditMock.mockResolvedValue({ rowCount: 3, errorCount: 0 });
+    auditSitemapFilesMock.mockResolvedValue([
+      {
+        url: 'https://example.com/page-1',
+        sitemapFile: '00-sitemap.xml',
+        lastmod: '2026-03-31',
+        changefreq: '',
+        priority: '',
+        hreflangCount: 0,
+        hreflangValues: '',
+        isDuplicate: 'FALSE',
+        isUtf8: 'TRUE',
+        isValidXml: 'TRUE',
+        hasValidNamespace: 'TRUE',
+      },
+    ]);
   });
 
   it('calls loadProject and runSitemapDownload with sitemapUrl and sitemapsDir', async () => {
@@ -378,32 +397,19 @@ describe('project sitemap audit', () => {
     );
   });
 
-  it('writes URLs to sitemap-done.txt in the dated folder', async () => {
+  it('calls auditSitemapFiles and writes sitemap-audit.csv', async () => {
     const program = makeProgram();
     await program.parseAsync([
       'node', 'seo', 'project', 'sitemap', 'audit', 'mysite',
       '--projects-dir', '/tmp/projects',
     ]);
 
-    expect(writeFileMock).toHaveBeenCalledWith(
-      '/tmp/projects/mysite/2026-03-31/sitemap-done.txt',
-      expect.stringContaining('https://example.com/page-1'),
-      'utf8',
+    expect(auditSitemapFilesMock).toHaveBeenCalledWith(
+      '/tmp/projects/mysite/2026-03-31/sitemaps/',
     );
-  });
-
-  it('calls runAudit with output = dated dir + sitemap-audit.csv', async () => {
-    const program = makeProgram();
-    await program.parseAsync([
-      'node', 'seo', 'project', 'sitemap', 'audit', 'mysite',
-      '--projects-dir', '/tmp/projects',
-    ]);
-
-    expect(runAuditMock).toHaveBeenCalledWith(
-      '/tmp/projects/mysite/2026-03-31/sitemap-done.txt',
-      expect.objectContaining({
-        output: '/tmp/projects/mysite/2026-03-31/sitemap-audit.csv',
-      }),
+    expect(writeSitemapAuditCsvMock).toHaveBeenCalledWith(
+      '/tmp/projects/mysite/2026-03-31/sitemap-audit.csv',
+      expect.any(Array),
     );
   });
 
@@ -427,14 +433,14 @@ describe('project sitemap audit', () => {
     );
   });
 
-  it('calls closeBrowser in finally block on success', async () => {
+  it('does not call closeBrowser (no page fetching)', async () => {
     const program = makeProgram();
     await program.parseAsync([
       'node', 'seo', 'project', 'sitemap', 'audit', 'mysite',
       '--projects-dir', '/tmp/projects',
     ]);
 
-    expect(closeBrowserMock).toHaveBeenCalled();
+    expect(closeBrowserMock).not.toHaveBeenCalled();
   });
 
   it('prints error to stderr when no URLs found in sitemaps', async () => {
@@ -469,7 +475,7 @@ describe('project sitemap audit', () => {
     stderrSpy.mockRestore();
   });
 
-  it('calls closeBrowser in finally block on error', async () => {
+  it('does not call closeBrowser on error (no page fetching)', async () => {
     loadProjectMock.mockRejectedValue(new Error('Project not found'));
 
     const program = makeProgram();
@@ -478,7 +484,7 @@ describe('project sitemap audit', () => {
       '--projects-dir', '/tmp/projects',
     ]);
 
-    expect(closeBrowserMock).toHaveBeenCalled();
+    expect(closeBrowserMock).not.toHaveBeenCalled();
     process.exitCode = 0;
   });
 });

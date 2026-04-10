@@ -1,5 +1,5 @@
 import path from 'node:path';
-import { access, readdir, readFile, writeFile } from 'node:fs/promises';
+import { access, readdir, readFile } from 'node:fs/promises';
 import { Command } from 'commander';
 import { createProject, listProjects, deleteProject, loadProject, listRuns } from '../project.js';
 import type { RunInfo } from '../project.js';
@@ -8,11 +8,11 @@ import { crawlCommand } from './crawl.js';
 import { auditCommand } from './audit.js';
 import { getStatePaths } from '../state.js';
 import { ensureDir } from '../io/files.js';
-import { runSitemapDownload, computeStats, grepSitemapDir, setIgnoreSsl } from '../sitemap-download.js';
+import { runSitemapDownload, computeStats, grepSitemapDir, auditSitemapFiles, setIgnoreSsl } from '../sitemap-download.js';
 import type { SitemapFile } from '../sitemap-download.js';
 import { parseSitemapXml, isSitemapIndex } from '../shared/sitemap.js';
-import { runAudit } from '../audit.js';
 import { closeBrowser } from '../shared/http.js';
+import { writeSitemapAuditCsv } from '../io/files.js';
 import { generateProjectDiffs } from '../diff.js';
 import { parse } from 'csv-parse/sync';
 
@@ -328,32 +328,16 @@ export function projectCommand(): Command {
             return;
           }
 
-          // Step 2: Extract all URLs from non-index sitemaps
-          const allUrls: string[] = [];
-          for (const file of files) {
-            if (file.isIndex) continue;
-            const content = await readFile(file.filePath, 'utf8');
-            const locs = parseSitemapXml(content);
-            for (const loc of locs) allUrls.push(loc);
-          }
-
-          // Step 3: Write URLs to sitemap-done.txt in the dated folder
-          await ensureDir(dateDir);
-          const doneFile = path.join(dateDir, 'sitemap-done.txt');
-          await writeFile(doneFile, allUrls.join('\n') + '\n', 'utf8');
-          console.log(`[sitemap-audit] Wrote ${allUrls.length} URLs to ${doneFile}`);
-
-          // Step 4: Run audit with output = dated dir + sitemap-audit.csv
+          // Step 2: Audit sitemap XML metadata (no page fetching)
+          console.log('[sitemap-audit] Auditing sitemap metadata...');
+          const records = await auditSitemapFiles(sitemapsDir);
           const outputFile = path.join(dateDir, 'sitemap-audit.csv');
-          console.log('[sitemap-audit] Running audit...');
-          const result = await runAudit(doneFile, { output: outputFile, stateDir: dateDir });
-          console.log(`[sitemap-audit] Audit complete. rows=${result.rowCount} errors=${result.errorCount} output=${outputFile}`);
+          await writeSitemapAuditCsv(outputFile, records);
+          console.log(`[sitemap-audit] Audit complete. rows=${records.length} output=${outputFile}`);
         } catch (error) {
           const message = error instanceof Error ? error.message : String(error);
           process.stderr.write('Error: ' + message + '\n');
           process.exitCode = 1;
-        } finally {
-          await closeBrowser();
         }
       },
     );

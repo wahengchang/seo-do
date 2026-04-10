@@ -1,4 +1,4 @@
-import type { AuditRecord, DiffRecord, RobotsDirective } from './types.js';
+import type { AuditRecord, DiffRecord, RobotsDirective, SitemapAuditRecord } from './types.js';
 
 export const TRACKING_PARAMS = new Set([
   'utm_source',
@@ -43,6 +43,20 @@ export const DIFF_COLUMNS: Array<keyof DiffRecord> = [
   'field',
   'oldValue',
   'newValue',
+];
+
+export const SITEMAP_AUDIT_COLUMNS: Array<keyof SitemapAuditRecord> = [
+  'url',
+  'sitemapFile',
+  'lastmod',
+  'changefreq',
+  'priority',
+  'hreflangCount',
+  'hreflangValues',
+  'isDuplicate',
+  'isUtf8',
+  'isValidXml',
+  'hasValidNamespace',
 ];
 
 export const AUDIT_COLUMNS: Array<keyof AuditRecord> = [
